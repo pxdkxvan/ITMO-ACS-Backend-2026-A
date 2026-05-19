@@ -80,16 +80,17 @@ class CompanyService(
     @Transactional
     fun createEmployerProfile(jwt: Jwt, request: EmployerProfileCreateRequest): EmployerProfileResponse {
         val user = currentUserService.currentUserWithRole(jwt, SystemRole.EMPLOYER)
-        if (employerProfileRepository.findByUser(user) != null) {
-            throw ApiException(HttpStatus.CONFLICT, ApiErrorCode.CONFLICT, "Employer profile already exists")
-        }
         val company = findCompany(request.companyId)
-        val profile = companyMapper.fromRawData(
+        val profile = employerProfileRepository.findByUser(user)?.also {
+            it.company = company
+            it.position = request.position.trim()
+        } ?: companyMapper.fromRawData(
             user = user,
             company = company,
             position = request.position.trim(),
         )
         val saved = employerProfileRepository.saveAndFlush(profile)
+
         return companyMapper.toEmployerProfileResponse(findEmployerProfile(saved.id!!))
     }
 

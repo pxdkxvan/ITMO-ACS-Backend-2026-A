@@ -26,6 +26,8 @@ spring:
 server:
   servlet:
     context-path: /api/v1
+  tomcat:
+    relaxed-query-chars: '[,]'
 
 management:
   endpoints:

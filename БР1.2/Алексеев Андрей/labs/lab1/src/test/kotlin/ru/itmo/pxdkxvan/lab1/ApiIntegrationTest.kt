@@ -109,6 +109,29 @@ class ApiIntegrationTest(
     }
 
     @Test
+    fun `recreating employer profile rebinds it to a new company`() {
+        val employer = registerAndLogin("EMPLOYER")
+        val firstCompany = createCompany(employer.token)
+        createEmployerProfile(employer.token, firstCompany.id)
+
+        val secondCompany = createCompany(employer.token)
+        val reboundProfile = createEmployerProfile(employer.token, secondCompany.id)
+
+        assertEquals(secondCompany.id.toString(), reboundProfile.companyId.toString())
+
+        val updatedCompany = perform(
+            patch("/api/v1/companies/${secondCompany.id}"),
+            body = mapOf("title" to "Acme Corp 2"),
+            token = employer.token,
+            expectedStatus = 200,
+        )
+        assertEquals(secondCompany.id.toString(), updatedCompany["id"].asText())
+
+        val vacancy = createVacancy(employer.token, secondCompany.id)
+        assertEquals(secondCompany.id.toString(), perform(get("/api/v1/vacancies/${vacancy.id}"), expectedStatus = 200)["company"]["id"].asText())
+    }
+
+    @Test
     fun `employer can manage vacancy assignments`() {
         val employer = registerAndLogin("EMPLOYER")
         val company = createCompany(employer.token)
@@ -364,7 +387,10 @@ class ApiIntegrationTest(
             expectedStatus = 201,
         )
 
-        return CreatedEmployerProfile(UUID.fromString(profile["id"].asText()))
+        return CreatedEmployerProfile(
+            id = UUID.fromString(profile["id"].asText()),
+            companyId = UUID.fromString(profile["company"]["id"].asText()),
+        )
     }
 
     private fun createVacancy(token: String, companyId: UUID): CreatedVacancy {
@@ -493,7 +519,10 @@ class ApiIntegrationTest(
 
     private data class CreatedCompany(val id: UUID)
 
-    private data class CreatedEmployerProfile(val id: UUID)
+    private data class CreatedEmployerProfile(
+        val id: UUID,
+        val companyId: UUID,
+    )
 
     private data class CreatedVacancy(
         val id: UUID,

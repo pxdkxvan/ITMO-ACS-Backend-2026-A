@@ -8,6 +8,8 @@ import org.springframework.security.access.AccessDeniedException
 import org.springframework.http.converter.HttpMessageNotReadableException
 import org.springframework.validation.FieldError
 import org.springframework.web.bind.MethodArgumentNotValidException
+import org.springframework.web.servlet.resource.NoResourceFoundException
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
 
@@ -57,12 +59,31 @@ class ApiExceptionHandler {
             .body(ErrorResponse(ApiErrorCode.VALIDATION, "Validation failed"))
     }
 
+    @ExceptionHandler(MethodArgumentTypeMismatchException::class)
+    fun handleMethodArgumentTypeMismatch(exception: MethodArgumentTypeMismatchException): ResponseEntity<ErrorResponse> {
+        logger.error("Request parameter type mismatch", exception)
+        val details = listOf(
+            ErrorDetail(exception.name, "Invalid value")
+        )
+        return ResponseEntity
+            .status(HttpStatus.BAD_REQUEST)
+            .body(ErrorResponse(ApiErrorCode.VALIDATION, "Validation failed", details))
+    }
+
     @ExceptionHandler(AccessDeniedException::class)
     fun handleAccessDenied(exception: AccessDeniedException): ResponseEntity<ErrorResponse> {
         logger.error("Access denied", exception)
         return ResponseEntity
             .status(HttpStatus.FORBIDDEN)
             .body(ErrorResponse(ApiErrorCode.FORBIDDEN, "Access denied"))
+    }
+
+    @ExceptionHandler(NoResourceFoundException::class)
+    fun handleNoResourceFound(exception: NoResourceFoundException): ResponseEntity<ErrorResponse> {
+        logger.error("Resource not found", exception)
+        return ResponseEntity
+            .status(HttpStatus.NOT_FOUND)
+            .body(ErrorResponse(ApiErrorCode.NOT_FOUND, "Resource not found"))
     }
 
     @ExceptionHandler(Exception::class)
