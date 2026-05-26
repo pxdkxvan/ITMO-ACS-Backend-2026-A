@@ -1,5 +1,6 @@
 package ru.itmo.pxdkxvan.lab1.vacancy.controller
 
+import io.swagger.v3.oas.annotations.Operation
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
