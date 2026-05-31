@@ -30,6 +30,11 @@ if [ ! -d "$APP_ROOT/.git" ]; then
   git clone --branch "$BRANCH" "$REPO_URL" "$APP_ROOT"
 fi
 
+if [ -n "$(git -C "$APP_ROOT" status --porcelain)" ]; then
+  rm -rf "$APP_ROOT"
+  git clone --branch "$BRANCH" "$REPO_URL" "$APP_ROOT"
+fi
+
 git -C "$APP_ROOT" fetch origin "$BRANCH"
 git -C "$APP_ROOT" checkout "$BRANCH"
 git -C "$APP_ROOT" pull --ff-only origin "$BRANCH"
@@ -40,4 +45,4 @@ docker compose pull --ignore-buildable || true
 docker compose up -d --build --remove-orphans
 
 docker compose ps
-curl -fsS http://127.0.0.1:8080/actuator/health
+curl -fsS http://127.0.0.1:18081/actuator/health
