@@ -16,7 +16,7 @@ services:
       INTERACTION_URL: http://interaction-service:8088
       NOTIFICATION_URL: http://notification-service:8089
     ports:
-      - "8080:8080"
+      - "127.0.0.1:18081:8080"
     networks:
       - lab23-network
 
